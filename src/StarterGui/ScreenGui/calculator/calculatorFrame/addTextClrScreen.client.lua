@@ -566,7 +566,7 @@ local function calculate(answer, inputsCalculator)
             local answer = math.floor(number + 0.5)
             return answer
         end
-
+    
         local function unitDec(number)
             local displacement = 0
             while number > 0 and number < 1 do
@@ -576,7 +576,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer, displacement
         end
-
+    
         local function signify(unitVal, sigFigure)
             sigFigure = sigFigure - 1
             while sigFigure ~= 0 do
@@ -585,7 +585,7 @@ local function calculate(answer, inputsCalculator)
             end
             return unitVal
         end
-
+    
         local function divideTen(number, sigFigure)
             while sigFigure ~= 0 do
                 number = number / 10
@@ -594,7 +594,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer
         end
-
+    
         local function revert(number, displacement)
             displacement = displacement - 1
             while displacement ~= 0 do
@@ -604,7 +604,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer
         end
-
+    
         local function computeDec(number, sigFigure)
             local unitVal, displacement = unitDec(number)
             print("UnitVal = " .. unitVal)
@@ -617,7 +617,7 @@ local function calculate(answer, inputsCalculator)
             answer = divideTen(answer, displacement)
             return answer
         end
-
+    
         local function unit(number)
             local unit
             local displacement = 1
@@ -628,7 +628,7 @@ local function calculate(answer, inputsCalculator)
             unit = number
             return unit, displacement
         end
-
+    
         local function multiTen(roundedUnit, displacement)
             while displacement ~= 0 do
                 roundedUnit = roundedUnit * 10
@@ -637,26 +637,32 @@ local function calculate(answer, inputsCalculator)
             local answer = roundedUnit
             return answer
         end
-
+    
         local function compute(number, sigFigure)
             local unit, displacement = unit(number)
             local sigUnit = signify(unit, sigFigure)
             print("Rounding off this number " .. sigUnit)
             local roundedSigUnit = round(sigUnit)
             print("Rounded unit is " .. roundedSigUnit)
-            local answer = divideTen(roundedSigUnit, sigFigure)
-            print("unit answer = " .. answer)
-            answer = multiTen(answer, displacement)
-            return answer
+            local diff
+            if displacement > sigFigure then
+                diff = displacement - sigFigure
+                local answer = multiTen(roundedSigUnit, diff)
+                return answer
+            else
+                diff = sigFigure - displacement
+                local answer = divideTen(roundedSigUnit, diff)
+                return answer
+            end
         end
-
+    
         local function solve()
             if number > 0 and number < 1 then
                 ANS = computeDec(number, sigFigure)
-                print("Rounded Answer is " .. ANS)
+                print("Answer is " .. ANS)
             else
                 ANS = compute(number, sigFigure)
-                print("Rounded Answer is " .. ANS)
+                print("Answer is " .. ANS)
             end
         end
         solve()
