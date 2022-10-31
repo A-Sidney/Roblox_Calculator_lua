@@ -19,14 +19,14 @@ negSign.Visible = false
 local negOn = false -- checks if negative sign is Visible
 local counter = 0
 local ANS
---elements types
+-- elements types
 local Number = "Number"
 local Sign = "Sign"
 
 -- Memory tables
 local hotCacheInputs = {}
 local hotCacheScreenInputs = {}
-local elementTypeArr = {}  --checks for the last element input into the screenInputs table
+local elementTypeArr = {} -- checks for the last element input into the screenInputs table
 
 -- tables
 local numsTable = {} -- for the main
@@ -53,12 +53,12 @@ local function resetMain()
 end
 
 local function elementCheck(value) -- this function checks the value type or data type of the last value input into the screen.
-    print("inputs are {".. table.concat(inputs, ", ") .. "}")
+    print("inputs are {" .. table.concat(inputs, ", ") .. "}")
     print("Value is " .. value)
-    if inputs[#inputs] == "+" or inputs[#inputs] == "-" or inputs[#inputs] == "×" or inputs[#inputs] == "÷" then --check if value is a sign
+    if inputs[#inputs] == "+" or inputs[#inputs] == "-" or inputs[#inputs] == "×" or inputs[#inputs] == "÷" then -- check if value is a sign
         print("Processing sign")
         table.insert(elementTypeArr, Sign)
-    else --value is a number
+    else -- value is a number
         print("Processing number")
         table.insert(elementTypeArr, Number)
     end
@@ -99,7 +99,7 @@ del.MouseButton1Click:Connect(function()
     table.remove(inputs, #inputs)
     table.remove(screenInputs, #screenInputs)
 
-    --for element type array
+    -- for element type array
     table.remove(elementTypeArr, #elementTypeArr)
 
     -- for memory
@@ -214,11 +214,11 @@ local function inputSignData(text, v, inputText) -- inputs the main data and sig
     if inputText == nil then
         tonumber(text) ------------------------------last fix
         table.insert(inputs, text)
-        --for element arr
+        -- for element arr
         elementCheck(text)
 
         table.insert(inputs, v.Text)
-        --for element arr
+        -- for element arr
         elementCheck(v.Text)
         -- for memory
         table.insert(hotCacheInputs, text)
@@ -228,7 +228,7 @@ local function inputSignData(text, v, inputText) -- inputs the main data and sig
         resetMain()
     elseif inputText == tonumber(inputText) then -- checks whether the inputText is already a number and doesn't need function tonumber()
         table.insert(inputs, inputText)
-        --for element arr
+        -- for element arr
         elementCheck(inputText)
 
         table.insert(inputs, v.Text)
@@ -243,8 +243,8 @@ local function inputSignData(text, v, inputText) -- inputs the main data and sig
     else
         inputText = tonumber(inputText)
         table.insert(inputs, inputText)
-        
-        --for element arr
+
+        -- for element arr
         elementCheck(inputText)
 
         table.insert(inputs, v.Text)
@@ -549,13 +549,119 @@ local function calculate(answer, inputsCalculator)
             end
         end
     end
-    -- NEVER CHANGE THE ORDER IN WHICH 'DIVISION' 'MULTIPLICATION' 'ADDITION-SUBTRACTION' ARE ARRANGED--
+    -- NEVER CHANGE THE ORDER IN WHICH 'DIVISION' 'MULTIPLICATION' 'ADDITION-SUBTRACTION' ARE ARRANGED --
     local function calculateBasic()
         division()
         multiplication()
         addSubtract()
     end
     calculateBasic()
+
+    ------------------- ROUNDING OFF PROCESS(11 s.f.) -----------------------------------------------------------------
+    -- this part rounds off the answer to the nearest 11 significat figures
+
+    local function roundOff(number, sigFigure)
+
+        local function round(number)
+            local answer = math.floor(number + 0.5)
+            return answer
+        end
+
+        local function unitDec(number)
+            local displacement = 0
+            while number > 0 and number < 1 do
+                number = number * 10
+                displacement = displacement + 1
+            end
+            local answer = number
+            return answer, displacement
+        end
+
+        local function signify(unitVal, sigFigure)
+            sigFigure = sigFigure - 1
+            while sigFigure ~= 0 do
+                unitVal = unitVal * 10
+                sigFigure = sigFigure - 1
+            end
+            return unitVal
+        end
+
+        local function divideTen(number, sigFigure)
+            while sigFigure ~= 0 do
+                number = number / 10
+                sigFigure = sigFigure - 1
+            end
+            local answer = number
+            return answer
+        end
+
+        local function revert(number, displacement)
+            displacement = displacement - 1
+            while displacement ~= 0 do
+                number = number / 10
+                displacement = displacement - 1
+            end
+            local answer = number
+            return answer
+        end
+
+        local function computeDec(number, sigFigure)
+            local unitVal, displacement = unitDec(number)
+            print("UnitVal = " .. unitVal)
+            local sigUnit = signify(unitVal, sigFigure)
+            print("Rounding off this number " .. sigUnit)
+            local roundedSigUnit = round(sigUnit)
+            print("Rounded unit is " .. roundedSigUnit)
+            local answer = revert(roundedSigUnit, sigFigure)
+            print("unit answer = " .. answer)
+            answer = divideTen(answer, displacement)
+            return answer
+        end
+
+        local function unit(number)
+            local unit
+            local displacement = 1
+            while number >= 10 do
+                number = number / 10
+                displacement = displacement + 1
+            end
+            unit = number
+            return unit, displacement
+        end
+
+        local function multiTen(roundedUnit, displacement)
+            while displacement ~= 0 do
+                roundedUnit = roundedUnit * 10
+                displacement = displacement - 1
+            end
+            local answer = roundedUnit
+            return answer
+        end
+
+        local function compute(number, sigFigure)
+            local unit, displacement = unit(number)
+            local sigUnit = signify(unit, sigFigure)
+            print("Rounding off this number " .. sigUnit)
+            local roundedSigUnit = round(sigUnit)
+            print("Rounded unit is " .. roundedSigUnit)
+            local answer = divideTen(roundedSigUnit, sigFigure)
+            print("unit answer = " .. answer)
+            answer = multiTen(answer, displacement)
+            return answer
+        end
+
+        local function solve()
+            if number > 0 and number < 1 then
+                ANS = computeDec(number, sigFigure)
+                print("Rounded Answer is " .. ANS)
+            else
+                ANS = compute(number, sigFigure)
+                print("Rounded Answer is " .. ANS)
+            end
+        end
+        solve()
+    end
+    roundOff(ANS, 11)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -578,15 +684,15 @@ local function showAns(answer)
     table.clear(screenInputs)
 end
 
-local function initCalculate(answer, inputsCalculations, bool) --if bool == true then it won't add 1 to counter
+local function initCalculate(answer, inputsCalculations, bool) -- if bool == true then it won't add 1 to counter
     calculate(answer, inputsCalculations)
     print("Answer = " .. ANS)
     showAns(ANS)
-    
+
     if bool == nil or bool == false then
         counter = counter + 1
     end
-    
+
     print("Counter is now at " .. counter)
 end
 
@@ -601,5 +707,6 @@ equals.MouseButton1Click:Connect(function()
 end)
 ---------------------------------------------------------------------------------------------
 -- Calculations are sorted!
--- REMAINING FIXES
--- 1.Continuours calculation after answer is given(after equals sign is pressed)
+-- Continuous calculations sorted!
+-- Rounding off final answer
+--Next Update: Brackets :3
