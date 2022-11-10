@@ -1,11 +1,15 @@
 local UserInputService = game:GetService("UserInputService")
-local enterButtonPress = UserInputService:IsKeyDown(Enum.KeyCode.KeypadEnter)
 
+local calFrame = script.Parent
 local screen = script.Parent.calScreen
-
 local main = script.Parent:WaitForChild("calWorkspace")
-local nums = script.Parent.numbers:GetChildren()
-local sign = script.Parent.sign:GetChildren()
+
+-- tables containing numbers, signs and symbols
+local nums = script.Parent.numbers:GetChildren() -- for numbers with text properties
+local sign = script.Parent.sign:GetChildren() -- for signs with text properties
+local brackets = script.Parent.brackets:GetChildren() -- for brackets with text properties
+
+-- other buttons
 local clr = script.Parent:FindFirstChild("clr")
 local clrScr = script.Parent:FindFirstChild("clrScr")
 local del = script.Parent:FindFirstChild("del")
@@ -19,6 +23,7 @@ negSign.Visible = false
 local negOn = false -- checks if negative sign is Visible
 local counter = 0
 local ANS
+
 -- elements types
 local Number = "Number"
 local Sign = "Sign"
@@ -33,6 +38,18 @@ local numsTable = {} -- for the main
 local inputs = {} -- for the screen and behind the screen calculations
 local screenInputs = {} -- for the screen contents to be dispayed to the user
 local inputsCal = {} -- behind the screen array that's responsible for computation, obtains its values from inputs
+
+-- Keyboard input tables
+local keyboardNumbers = {"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Zero"}
+local keyboardNumArr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}
+local keyboardSigns = {
+    divisionTable = {"Slash", "KeypadDivide"},
+    multiplicationTable = {"KeypadMultiply"},
+    addTable = {"KeypadPlus", "Equals"},
+    minusTable = {"KeypadMinus", "Minus"},
+    miscellaneousTable = {"Return", "Backspace", "Q"}
+}
+local signsArr = {"÷", "×", "+", "-"} -- NEVER chage the oreder in which these are arranged [For 761]
 
 -- functions
 local function noNeg() -- turns off negaitve sign
@@ -53,8 +70,10 @@ local function resetMain()
 end
 
 local function elementCheck(value) -- this function checks the value type or data type of the last value input into the screen.
-    print("inputs are {" .. table.concat(inputs, ", ") .. "}")
-    print("Value is " .. value)
+    if value ~= nil then
+        print("inputs are {" .. table.concat(inputs, ", ") .. "}")
+        print("Value is " .. value)
+    end
     if inputs[#inputs] == "+" or inputs[#inputs] == "-" or inputs[#inputs] == "×" or inputs[#inputs] == "÷" then -- check if value is a sign
         print("Processing sign")
         table.insert(elementTypeArr, Sign)
@@ -63,6 +82,17 @@ local function elementCheck(value) -- this function checks the value type or dat
         table.insert(elementTypeArr, Number)
     end
 end
+
+----------------Info on Keyboard inputs----------------
+-- Deleting numbers from the main        backspace
+-- Deleting values on the screen         X
+-- Clearing the Main                     C
+-- Clearing the Screen                   Z
+-- Divide                                /(either)
+-- multiply                              *(Numpad only)
+-- add                                   = or +
+-- subtract                              -(either)
+--------------------------------------------------------
 
 --------------------------------data reset and counter functions-------------------------------------------------------------
 -- data reset function, clears all data in screen, screenInputs and inputsCal
@@ -88,14 +118,15 @@ end
 
 ----------------------------Screen Clear and Delete buttons-------------------------------------------------------------------
 -- clears text on the screen when pressed
-clrScr.MouseButton1Click:Connect(function()
+local function clearScreen()
     if screen.Text ~= "" then
         resetScreen(1) -- screen & counter reset
     end
-end)
+end
+clrScr.MouseButton1Click:Connect(clearScreen)
 
 -- deletes the last thing input on the screen
-del.MouseButton1Click:Connect(function()
+local function delPress()
     table.remove(inputs, #inputs)
     table.remove(screenInputs, #screenInputs)
 
@@ -107,7 +138,9 @@ del.MouseButton1Click:Connect(function()
     table.remove(hotCacheScreenInputs, #hotCacheScreenInputs)
 
     screen.Text = table.concat(screenInputs)
-end)
+end
+del.MouseButton1Click:Connect(delPress)
+-- UserInputService.InputBegan:Connect()
 ------------------------------------------------------------------------------------------------------------------------------
 
 ------------------------------adding numbers to the main----------------------------------------------------------------------
@@ -123,15 +156,20 @@ local function addNumZeroCounter(v)
     table.insert(numsTable, v.Text)
     main.Text = table.concat(numsTable)
 end
+
 -- adds text to screen when a num button is pressed
+local function numPress(number)
+    if counter > 0 then
+        addNumCounter(number)
+        print("Counter has been reset")
+    else
+        addNumZeroCounter(number)
+    end
+end
+
 for i, v in pairs(nums) do
     v.MouseButton1Click:Connect(function()
-        if counter > 0 then
-            addNumCounter(v)
-            print("Counter has been reset")
-        else
-            addNumZeroCounter(v)
-        end
+        numPress(v)
     end)
 end
 
@@ -148,8 +186,8 @@ local function zeroDec() -- inserts a 0, then adds a decimal to main screen when
     end
 end
 
--- decimal button press
-dec.MouseButton1Click:Connect(function()
+-- for decimal button press
+local function decimalPress()
     if counter > 0 then
         resetMain()
         resetScreen(1) -- counter and screen reset
@@ -158,18 +196,19 @@ dec.MouseButton1Click:Connect(function()
     else
         zeroDec()
     end
-end)
+end
+dec.MouseButton1Click:Connect(decimalPress)
 
 -- neg button pressed, adds neg sign or removes neg sign
 -- add neg sign function
-
-neg.MouseButton1Click:Connect(function()
+local function negPress()
     if negOn then
         noNeg()
     else
         putNeg()
     end
-end)
+end
+neg.MouseButton1Click:Connect(negPress)
 ------------------------------------------------------------------------------------------------------------------------------
 
 ---------------------------Main functions----------------------------------------------
@@ -185,9 +224,7 @@ local function remLastMain()
 end
 
 -- button that removes the last number/value on the main screen
-delMain.MouseButton1Click:Connect(function()
-    remLastMain()
-end)
+delMain.MouseButton1Click:Connect(remLastMain)
 
 -- funciton that resets the main screen
 local function clearMain()
@@ -198,9 +235,7 @@ local function clearMain()
 end
 
 -- clears the screen text when ClrScr button is pressed
-clr.MouseButton1Click:Connect(function()
-    clearMain()
-end)
+clr.MouseButton1Click:Connect(clearMain)
 ------------------------------------------------------------------------------------------
 
 ----------------------------------adding numbers to calscreen on sign button press---------------------------------------------------------------------------------------------------
@@ -306,21 +341,25 @@ local function addTextCounter(v)
     inputSignData(text, v, inputText)
 end
 
+local function signPress(sign)
+    if counter > 0 then
+        addTextCounter(sign)
+    else
+        if elementTypeArr[#elementTypeArr] == Number then
+            print("insertSignOnly is running")
+            insertSignOnly(sign)
+        else
+            print("no number found in last")
+            addTextZeroCounter(sign)
+        end
+        print("elementTypeArr is: {" .. table.concat(elementTypeArr, ", "), "}")
+    end
+end
+
 local function addRemoveText() -- adds text to screen
     for i, v in pairs(sign) do
         v.MouseButton1Click:Connect(function()
-            if counter > 0 then
-                addTextCounter(v)
-            else
-                if elementTypeArr[#elementTypeArr] == Number then
-                    print("insertSignOnly is running")
-                    insertSignOnly(v)
-                else
-                    print("no number found in last")
-                    addTextZeroCounter(v)
-                end
-                print("elementTypeArr is: {" .. table.concat(elementTypeArr, ", "), "}")
-            end
+            signPress(v)
         end)
         counter = 0
     end
@@ -566,7 +605,7 @@ local function calculate(answer, inputsCalculator)
             local answer = math.floor(number + 0.5)
             return answer
         end
-    
+
         local function unitDec(number)
             local displacement = 0
             while number > 0 and number < 1 do
@@ -576,7 +615,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer, displacement
         end
-    
+
         local function signify(unitVal, sigFigure)
             sigFigure = sigFigure - 1
             while sigFigure ~= 0 do
@@ -585,7 +624,7 @@ local function calculate(answer, inputsCalculator)
             end
             return unitVal
         end
-    
+
         local function divideTen(number, sigFigure)
             while sigFigure ~= 0 do
                 number = number / 10
@@ -594,7 +633,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer
         end
-    
+
         local function revert(number, displacement)
             displacement = displacement - 1
             while displacement ~= 0 do
@@ -604,7 +643,7 @@ local function calculate(answer, inputsCalculator)
             local answer = number
             return answer
         end
-    
+
         local function computeDec(number, sigFigure)
             local unitVal, displacement = unitDec(number)
             print("UnitVal = " .. unitVal)
@@ -617,7 +656,7 @@ local function calculate(answer, inputsCalculator)
             answer = divideTen(answer, displacement)
             return answer
         end
-    
+
         local function unit(number)
             local unit
             local displacement = 1
@@ -628,7 +667,7 @@ local function calculate(answer, inputsCalculator)
             unit = number
             return unit, displacement
         end
-    
+
         local function multiTen(roundedUnit, displacement)
             while displacement ~= 0 do
                 roundedUnit = roundedUnit * 10
@@ -637,7 +676,7 @@ local function calculate(answer, inputsCalculator)
             local answer = roundedUnit
             return answer
         end
-    
+
         local function compute(number, sigFigure)
             local unit, displacement = unit(number)
             local sigUnit = signify(unit, sigFigure)
@@ -655,7 +694,7 @@ local function calculate(answer, inputsCalculator)
                 return answer
             end
         end
-    
+
         local function solve()
             if number > 0 and number < 1 then
                 ANS = computeDec(number, sigFigure)
@@ -703,16 +742,82 @@ local function initCalculate(answer, inputsCalculations, bool) -- if bool == tru
 end
 
 -- calculates the answer when equals is pressed
-equals.MouseButton1Click:Connect(function()
+local function equalPress()
     print("Counter when equals is pressed is at " .. counter)
     if counter == 0 then
         initCalculate()
     else
         print("Counter over 0. Counter is at " .. counter)
     end
-end)
----------------------------------------------------------------------------------------------
+end
+equals.MouseButton1Click:Connect(equalPress)
+
+-----------------------------------------------------------------------------------------------------------
 -- Calculations are sorted!
 -- Continuous calculations sorted!
--- Rounding off final answer
---Next Update: Brackets :3
+-- Rounding off final answer sorted!
+-- Next Update: Brackets :3
+
+----------------------------------------------------------------------OTHER CONTROLS----------------------------------------------------------------------------------------
+-------------------Keyboard Input Functions and operations-------------------------------------------------
+local function whileOnHold(button, delay, passFunction)
+    local timer = delay
+    local function decoy()
+        passFunction()
+    end
+    decoy()
+    wait(timer)
+    while wait() do
+        if UserInputService:IsKeyDown(Enum.KeyCode["Backspace"]) then
+            decoy()
+        else
+            break
+        end
+        wait(0.1)
+    end
+end
+local function keyboardInput(input, gameProccessedEvent)
+    if input.UserInputType == Enum.UserInputType["Keyboard"] then -- checks if the input is from a keyboard
+        ---------------Inputting numbers using the keyboard
+        for i, v in pairs(keyboardNumbers) do
+            if input.KeyCode == Enum.KeyCode[v] then
+                local value = tostring(keyboardNumArr[i])
+                for pos, val in pairs(nums) do
+                    if val.Text == value then
+                        numPress(val)
+                    end
+                end
+            end
+        end
+        ---------------Inputting operation signs and symbols using keyboard
+        for i, v in pairs(keyboardSigns) do
+            for pos, val in pairs(v) do
+                if input.KeyCode == Enum.KeyCode[val] then
+                    print("Val is = " .. val)
+                    local sign = script.Parent.sign
+                    if val == "Slash" or val == "KeypadDivide" then
+                        signPress(sign:FindFirstChild("divide"))
+                    elseif val == "KeypadMultiply" then
+                        signPress(sign:FindFirstChild("times"))
+                    elseif val == "Equals" or val == "KeypadPlus" then
+                        signPress(sign:FindFirstChild("plus"))
+                    elseif val == "KeypadMinus" or val == "Minus" then
+                        signPress(sign:FindFirstChild("minus"))
+                    elseif val == "Return" then
+                        equalPress()
+                    elseif val == "Backspace" then
+                        whileOnHold(val, 1, remLastMain)
+                    elseif val == "Q" then
+                        
+                    end
+                end
+            end
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if calFrame.Visible == true then
+        keyboardInput(input, gameProcessedEvent)
+    end
+end)
