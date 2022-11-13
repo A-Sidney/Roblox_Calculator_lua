@@ -461,7 +461,13 @@ local function calculate(answer, inputsCalculator)
     if counter == 0 then
         inputMain()
         inputsCal = inputs -- obtains values from "inputs" in order to calculate them separately to give results
-        ANS = 0
+        
+        --fixes the single digit calculation. If the inputs only contatins 1 value.
+        if #inputs == 1 then
+            ANS = inputs[1]
+        else
+            ANS = 0
+        end
     else
         inputsCal = inputsCalculator
         ANS = answer
