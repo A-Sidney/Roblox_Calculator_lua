@@ -521,7 +521,6 @@ local function calculate(answer, inputsCalculator)
         -- DIVISION
         if divide > 0 then
             while divide > 0 do
-                local function r()
                     for i, v in pairs(inputsCal) do
                         if v == "÷" then
                             local success, errormessage = pcall(function()
@@ -535,8 +534,6 @@ local function calculate(answer, inputsCalculator)
                             end
                         end
                     end
-                end
-                r()
                 divide = divide - 1
             end
         end
@@ -545,7 +542,6 @@ local function calculate(answer, inputsCalculator)
         -- MULTIPLICATION
         if multi > 0 then
             while multi > 0 do
-                local function r()
                     for i, v in pairs(inputsCal) do
                         if v == "×" then
                             local success, errormessage = pcall(function()
@@ -559,8 +555,6 @@ local function calculate(answer, inputsCalculator)
                             end
                         end
                     end
-                end
-                r()
                 multi = multi - 1
             end
         end
@@ -569,7 +563,6 @@ local function calculate(answer, inputsCalculator)
         -- ADDITION AND SUBTRACTION
         if addSub > 0 then
             while addSub > 0 do
-                local function r()
                     for i, v in pairs(inputsCal) do
                         if v == "+" or v == "-" then
                             local success, errormessage = pcall(function()
@@ -588,8 +581,6 @@ local function calculate(answer, inputsCalculator)
                             end
                         end
                     end
-                end
-                r()
                 addSub = addSub - 1
             end
         end
@@ -813,8 +804,6 @@ local function keyboardInput(input, gameProccessedEvent)
                         equalPress()
                     elseif val == "Backspace" then
                         whileOnHold(val, 1, remLastMain)
-                    elseif val == "Q" then
-                        
                     end
                 end
             end
