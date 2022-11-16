@@ -10,9 +10,9 @@ local sign = script.Parent.sign:GetChildren() -- for signs with text properties
 local brackets = script.Parent.brackets:GetChildren() -- for brackets with text properties
 
 -- other buttons
-local clr = script.Parent:FindFirstChild("clr")
+local clrMain = script.Parent:FindFirstChild("clr")
 local clrScr = script.Parent:FindFirstChild("clrScr")
-local del = script.Parent:FindFirstChild("del")
+local delScr = script.Parent:FindFirstChild("del")
 local delMain = script.Parent:FindFirstChild("delMain")
 
 local dec = script.Parent.decimal
@@ -38,18 +38,6 @@ local numsTable = {} -- for the main
 local inputs = {} -- for the screen and behind the screen calculations
 local screenInputs = {} -- for the screen contents to be dispayed to the user
 local inputsCal = {} -- behind the screen array that's responsible for computation, obtains its values from inputs
-
--- Keyboard input tables
-local keyboardNumbers = {"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Zero"}
-local keyboardNumArr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}
-local keyboardSigns = {
-    divisionTable = {"Slash", "KeypadDivide"},
-    multiplicationTable = {"KeypadMultiply"},
-    addTable = {"KeypadPlus", "Equals"},
-    minusTable = {"KeypadMinus", "Minus"},
-    miscellaneousTable = {"Return", "Backspace", "Q"}
-}
-local signsArr = {"÷", "×", "+", "-"} -- NEVER chage the oreder in which these are arranged [For 761]
 
 -- functions
 local function noNeg() -- turns off negaitve sign
@@ -82,17 +70,6 @@ local function elementCheck(value) -- this function checks the value type or dat
         table.insert(elementTypeArr, Number)
     end
 end
-
-----------------Info on Keyboard inputs----------------
--- Deleting numbers from the main        backspace
--- Deleting values on the screen         X
--- Clearing the Main                     C
--- Clearing the Screen                   Z
--- Divide                                /(either)
--- multiply                              *(Numpad only)
--- add                                   = or +
--- subtract                              -(either)
---------------------------------------------------------
 
 --------------------------------data reset and counter functions-------------------------------------------------------------
 -- data reset function, clears all data in screen, screenInputs and inputsCal
@@ -139,7 +116,7 @@ local function delPress()
 
     screen.Text = table.concat(screenInputs)
 end
-del.MouseButton1Click:Connect(delPress)
+delScr.MouseButton1Click:Connect(delPress)
 -- UserInputService.InputBegan:Connect()
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -235,7 +212,7 @@ local function clearMain()
 end
 
 -- clears the screen text when ClrScr button is pressed
-clr.MouseButton1Click:Connect(clearMain)
+clrMain.MouseButton1Click:Connect(clearMain)
 ------------------------------------------------------------------------------------------
 
 ----------------------------------adding numbers to calscreen on sign button press---------------------------------------------------------------------------------------------------
@@ -757,22 +734,44 @@ equals.MouseButton1Click:Connect(equalPress)
 
 ----------------------------------------------------------------------OTHER CONTROLS----------------------------------------------------------------------------------------
 -------------------Keyboard Input Functions and operations-------------------------------------------------
-local function whileOnHold(button, delay, passFunction)
-    local timer = delay
-    local function decoy()
-        passFunction()
-    end
-    decoy()
+-- Keyboard input tables
+local keyboardNumbers = {"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Zero"}
+local keyboardNumArr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}
+local keyboardSigns = {
+    divisionTable = {"Slash", "KeypadDivide"},
+    multiplicationTable = {"KeypadMultiply"},
+    addTable = {"KeypadPlus", "Equals"},
+    minusTable = {"KeypadMinus", "Minus"},
+    miscellaneousTable = {"Return", "Backspace", "Q", "Z", "X", "C"}
+}
+local signsArr = {"÷", "×", "+", "-"}
+
+----------------Info on Keyboard inputs----------------
+-- Deleting numbers from the main        backspace
+-- Deleting values on the screen         Z
+-- Clearing the Main                     C
+-- Clearing the Screen                   X
+-- Divide                                /(either)
+-- multiply                              *(Numpad only)
+-- add                                   = or +
+-- subtract                              -(either)
+--------------------------------------------------------
+-- functions
+
+local function whileOnHold(button, passFunction, firstDelay, reccursiveDelay) -- function that delays an operation while a certain button is held, then repeats the operation in quick succession while on hold. whileOnHold(key, passFunction, firstdelay[1], recursiveDelay[0.1]). **[Recommended values]**
+    local timer = firstDelay
+    passFunction()
     wait(timer)
     while wait() do
-        if UserInputService:IsKeyDown(Enum.KeyCode["Backspace"]) then
-            decoy()
+        if UserInputService:IsKeyDown(Enum.KeyCode[button]) then
+            passFunction()
         else
             break
         end
-        wait(0.1)
+        wait(reccursiveDelay)
     end
 end
+
 local function keyboardInput(input, gameProccessedEvent)
     if input.UserInputType == Enum.UserInputType["Keyboard"] then -- checks if the input is from a keyboard
         ---------------Inputting numbers using the keyboard
@@ -803,7 +802,13 @@ local function keyboardInput(input, gameProccessedEvent)
                     elseif val == "Return" then
                         equalPress()
                     elseif val == "Backspace" then
-                        whileOnHold(val, 1, remLastMain)
+                        whileOnHold(val, remLastMain, 1, 0.1)
+                    elseif val == "Z" then
+                        whileOnHold(val, delPress, 1, 0.1)
+                    elseif val == "C" then
+                        clearMain()
+                    elseif val == "X" then
+                        clearScreen()
                     end
                 end
             end
