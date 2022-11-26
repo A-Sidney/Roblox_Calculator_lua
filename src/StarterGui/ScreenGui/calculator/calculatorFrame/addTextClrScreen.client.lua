@@ -446,7 +446,6 @@ local function calculate(answer, inputsCalculator)
             ANS = 0
         end
     else
-        inputsCal = inputsCalculator
         ANS = answer
     end
     --------------------------------------------------------------------------------------------------------------------------------------
@@ -456,7 +455,7 @@ local function calculate(answer, inputsCalculator)
     -----FUTURE DEVELOPMENT-------
     -- This AARSC will have different version to calter for diffent levels and types of calculations, for example; exponent and root processing, parenthesis(brackets) processing ....etc
 
-    -- //CODE HERE//--
+    -- //CODE HERE// --
 
     -------------------------------Basic Operations [lvl 1 AARSC]--------------------------------------------------------------------------
     local function replace(i) -- its removes data from inputsCal array after it has been calculated. For Basic Operations[add, sub, div, mul]
@@ -478,7 +477,7 @@ local function calculate(answer, inputsCalculator)
     ----------------------------------------------------------------------------------------
     local function checkOps()
         for i, v in pairs(inputsCal) do -- counts how many operations need to be made with respect to the list of computatble operations
-            if v == "÷" then
+            if v == "÷" or v == "/" then
                 divide = divide + 1
             end
             if v == "×" then
@@ -499,7 +498,7 @@ local function calculate(answer, inputsCalculator)
         if divide > 0 then
             while divide > 0 do
                     for i, v in pairs(inputsCal) do
-                        if v == "÷" then
+                        if v == "÷" or v == "/" then
                             local success, errormessage = pcall(function()
                                 ANS = inputs[i - 1] / inputs[i + 1] -- division process
                                 replace(i)
@@ -703,15 +702,12 @@ local function showAns(answer)
     table.clear(screenInputs)
 end
 
-local function initCalculate(answer, inputsCalculations, bool) -- if bool == true then it won't add 1 to counter
-    calculate(answer, inputsCalculations)
+local function initCalculate(answer)
+    calculate(answer)
     print("Answer = " .. ANS)
     showAns(ANS)
 
-    if bool == nil or bool == false then
-        counter = counter + 1
-    end
-
+    counter = counter + 1
     print("Counter is now at " .. counter)
 end
 
